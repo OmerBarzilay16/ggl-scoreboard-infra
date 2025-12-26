@@ -1,13 +1,13 @@
-resource "kubernetes_namespace" "scoreboard" {
+resource "kubernetes_namespace_v1" "scoreboard" {
   metadata {
     name = "scoreboard"
   }
 }
 
-resource "kubernetes_role_binding" "deployer_edit" {
+resource "kubernetes_role_binding_v1" "deployer_edit" {
   metadata {
     name      = "scoreboard-deployer-edit"
-    namespace = kubernetes_namespace.scoreboard.metadata[0].name
+    namespace = kubernetes_namespace_v1.scoreboard.metadata[0].name
   }
 
   role_ref {
