@@ -1,14 +1,14 @@
+# Terraform
 .terraform/
 *.tfstate
 *.tfstate.*
-crash.log
-crash.*.log
 *.tfvars
-*.tfvars.json
-terraform.tfplan
-.DS_Store
+crash.log
 
-# Service account keys (security)
-*-key.json
-*key.json
-*.json.key
+# Secrets / local creds
+github-bootstrap-key.json
+gha-creds-*.json
+
+# OS/editor
+.DS_Store
+.vscode/
