@@ -6,8 +6,8 @@ module "gke_arena" {
   zones        = var.zones
   cluster_name = var.cluster_name
 
-  network_name = var.network_name
-  subnet_cidr  = var.subnet_cidr
-  pods_cidr    = var.pods_cidr
+  network_name  = var.network_name
+  subnet_cidr   = var.subnet_cidr
+  pods_cidr     = var.pods_cidr
   services_cidr = var.services_cidr
 }

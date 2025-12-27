@@ -16,28 +16,28 @@ variable "zones" {
 }
 
 variable "cluster_name" {
-  type        = string
-  default     = "ggl-arena"
+  type    = string
+  default = "ggl-arena"
 }
 
 variable "network_name" {
-  type        = string
-  default     = "ggl-vpc"
+  type    = string
+  default = "ggl-vpc"
 }
 
 variable "subnet_cidr" {
-  type        = string
-  default     = "10.10.0.0/16"
+  type    = string
+  default = "10.10.0.0/16"
 }
 
 variable "pods_cidr" {
-  type        = string
-  default     = "10.20.0.0/16"
+  type    = string
+  default = "10.20.0.0/16"
 }
 
 variable "services_cidr" {
-  type        = string
-  default     = "10.30.0.0/20"
+  type    = string
+  default = "10.30.0.0/20"
 }
 
 # GitHub repo that is allowed to authenticate via OIDC to GCP (WIF)

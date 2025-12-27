@@ -1,6 +1,6 @@
 locals {
-  arena_builder_sa_name   = "arena-builder-sa"
-  deployer_sa_name        = "scoreboard-deployer-sa"
+  arena_builder_sa_name = "arena-builder-sa"
+  deployer_sa_name      = "scoreboard-deployer-sa"
 }
 
 resource "google_service_account" "arena_builder" {
@@ -18,6 +18,7 @@ resource "google_project_iam_member" "builder_roles" {
   for_each = toset([
     "roles/container.admin",
     "roles/compute.admin",
+    "roles/iam.workloadIdentityPoolAdmin",
     "roles/iam.serviceAccountAdmin",
     "roles/resourcemanager.projectIamAdmin",
     "roles/storage.admin",
