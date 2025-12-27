@@ -20,6 +20,7 @@ resource "google_project_iam_member" "builder_roles" {
     "roles/compute.admin",
     "roles/iam.workloadIdentityPoolAdmin",
     "roles/iam.serviceAccountAdmin",
+    "roles/iam.serviceAccountUser",
     "roles/resourcemanager.projectIamAdmin",
     "roles/storage.admin",
   ])
