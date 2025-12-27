@@ -40,3 +40,13 @@ resource "google_project_iam_member" "deployer_roles" {
   role    = each.key
   member  = "serviceAccount:${google_service_account.scoreboard_deployer.email}"
 }
+
+data "google_project" "current" {
+  project_id = var.project_id
+}
+
+resource "google_service_account_iam_member" "builder_can_use_default_compute_sa" {
+  service_account_id = "projects/${var.project_id}/serviceAccounts/${data.google_project.current.number}-compute@developer.gserviceaccount.com"
+  role               = "roles/iam.serviceAccountUser"
+  member             = "serviceAccount:${google_service_account.arena_builder.email}"
+}

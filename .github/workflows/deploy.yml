@@ -26,7 +26,7 @@ jobs:
       - name: Auth to GCP (WIF as arena-builder-sa)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl/providers/github-provider-ggl
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl2/providers/github-provider-ggl2
           service_account: arena-builder-sa@scoreboard-482409.iam.gserviceaccount.com
 
       - name: Set up gcloud
@@ -65,30 +65,20 @@ jobs:
       - name: Auth to GCP (WIF as scoreboard-deployer-sa)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl/providers/github-provider-ggl
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl2/providers/github-provider-ggl2
           service_account: scoreboard-deployer-sa@scoreboard-482409.iam.gserviceaccount.com
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
-      - name: Enable GKE auth plugin
-        run: |
-          echo "USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
-          gcloud version
-          which gke-gcloud-auth-plugin || true
-          gke-gcloud-auth-plugin --version || true
-
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v4
-        with:
-          version: "v1.33.0"
 
       - name: Get GKE credentials
-        run: |
-          gcloud container clusters get-credentials "${CLUSTER_NAME}" \
-            --region "${REGION}" \
-            --project "${PROJECT_ID}"
+        uses: google-github-actions/get-gke-credentials@v2
+        with:
+          cluster_name: ${{ env.CLUSTER_NAME }}
+          location: ${{ env.REGION }}
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Deploy Scoreboard
         run: |
@@ -100,7 +90,6 @@ jobs:
 
       - name: Latency / availability check + print URL
         run: |
-          # Wait for LB to get an external endpoint
           kubectl wait -n scoreboard --for=jsonpath='{.status.loadBalancer.ingress[0]}' svc/scoreboard --timeout=600s
 
           HOST=$(kubectl get svc scoreboard -n scoreboard -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
@@ -109,7 +98,5 @@ jobs:
           fi
 
           echo "Scoreboard API URL: http://$HOST"
-
-          # Basic availability check (HTTP 200)
           curl -sSf "http://$HOST" >/dev/null
           echo "Service is UP ✅"
