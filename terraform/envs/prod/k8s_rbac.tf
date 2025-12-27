@@ -18,7 +18,7 @@ resource "kubernetes_role_binding_v1" "deployer_edit" {
 
   subject {
     kind      = "User"
-    name      = google_service_account.scoreboard_deployer.email
+    name      = data.google_service_account.scoreboard_deployer.email
     api_group = "rbac.authorization.k8s.io"
   }
 }

@@ -12,11 +12,11 @@ output "workload_identity_pool" {
 }
 
 output "arena_builder_sa_email" {
-  value = google_service_account.arena_builder.email
+  value = data.google_service_account.arena_builder.email
 }
 
 output "scoreboard_deployer_sa_email" {
-  value = google_service_account.scoreboard_deployer.email
+  value = data.google_service_account.scoreboard_deployer.email
 }
 
 output "wif_provider_resource_name" {
