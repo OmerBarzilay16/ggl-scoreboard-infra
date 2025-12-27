@@ -1,0 +1,109 @@
+name: Deploy Scoreboard API
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  PROJECT_ID: scoreboard-482409
+  REGION: us-central1
+  CLUSTER_NAME: ggl-arena
+  TF_WORKDIR: terraform/envs/prod
+  TF_BACKEND_BUCKET: scoreboard-482409-tfstate-8b862d29
+
+jobs:
+  terraform:
+    name: Terraform Apply (arena-builder-sa)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to GCP (WIF as arena-builder-sa)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: arena-builder-sa@scoreboard-482409.iam.gserviceaccount.com
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.8
+
+      - name: Terraform Init
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform init -reconfigure \
+            -backend-config="bucket=${TF_BACKEND_BUCKET}"
+
+      - name: Terraform Apply
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform apply -auto-approve \
+            -var="project_id=${PROJECT_ID}" \
+            -var="github_owner=OmerBarzilay16" \
+            -var="github_repo=ggl-scoreboard-infra"
+
+  deploy:
+    name: kubectl Deploy (scoreboard-deployer-sa)
+    runs-on: ubuntu-latest
+    needs: terraform
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Auth to GCP (WIF as scoreboard-deployer-sa)
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: scoreboard-deployer-sa@scoreboard-482409.iam.gserviceaccount.com
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Install kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: "v1.33.0"
+
+      - name: Get GKE credentials
+        run: |
+          gcloud container clusters get-credentials "${CLUSTER_NAME}" \
+            --region "${REGION}" \
+            --project "${PROJECT_ID}"
+
+      - name: Deploy Scoreboard
+        run: |
+          kubectl apply -f k8s/scoreboard.yaml
+
+      - name: Wait for rollout
+        run: |
+          kubectl rollout status deployment/scoreboard -n scoreboard --timeout=300s
+
+      - name: Latency / availability check + print URL
+        run: |
+          # Wait for LB to get an external endpoint
+          kubectl wait -n scoreboard --for=jsonpath='{.status.loadBalancer.ingress[0]}' svc/scoreboard --timeout=600s
+
+          HOST=$(kubectl get svc scoreboard -n scoreboard -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          if [ -z "$HOST" ]; then
+            HOST=$(kubectl get svc scoreboard -n scoreboard -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
+          fi
+
+          echo "Scoreboard API URL: http://$HOST"
+
+          # Basic availability check (HTTP 200)
+          curl -sSf "http://$HOST" >/dev/null
+          echo "Service is UP ✅"
