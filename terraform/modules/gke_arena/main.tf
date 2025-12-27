@@ -23,8 +23,8 @@ resource "google_compute_subnetwork" "subnet" {
 resource "google_container_cluster" "arena" {
   provider = google-beta
 
-  name     = var.cluster_name
-  location = var.region
+  name                = var.cluster_name
+  location            = var.region
   deletion_protection = false
 
   node_locations = var.zones
@@ -34,7 +34,7 @@ resource "google_container_cluster" "arena" {
 
   network    = google_compute_network.vpc.name
   subnetwork = google_compute_subnetwork.subnet.name
-  
+
   ip_allocation_policy {
     cluster_secondary_range_name  = "pods"
     services_secondary_range_name = "services"
@@ -63,18 +63,14 @@ resource "google_container_node_pool" "primary" {
   name       = "${var.cluster_name}-np"
   location   = var.region
   cluster    = google_container_cluster.arena.name
-  node_count = 1
 
+  # 2 nodes total (1 per zone) when var.zones has 2 zones
+  node_count     = 1
   node_locations = var.zones
-
-  autoscaling {
-    min_node_count = 1
-    max_node_count = 2
-  }
 
   node_config {
     machine_type = "e2-medium"
-    spot         = true
+    spot         = false
 
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
