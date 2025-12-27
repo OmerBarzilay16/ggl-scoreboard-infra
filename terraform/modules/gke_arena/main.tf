@@ -73,7 +73,7 @@ resource "google_container_node_pool" "primary" {
   }
 
   node_config {
-    machine_type = "e2-medium"
+    machine_type = "e2-small"
     spot         = true
 
     oauth_scopes = [
