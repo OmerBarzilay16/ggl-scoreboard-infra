@@ -13,11 +13,3 @@ data "google_iam_workload_identity_pool_provider" "github" {
   workload_identity_pool_id          = data.google_iam_workload_identity_pool.github.workload_identity_pool_id
   workload_identity_pool_provider_id = "github-provider-ggl2"
 }
-
-output "workload_identity_pool_name" {
-  value = data.google_iam_workload_identity_pool.github.name
-}
-
-output "wif_provider_resource_name" {
-  value = data.google_iam_workload_identity_pool_provider.github.name
-}
