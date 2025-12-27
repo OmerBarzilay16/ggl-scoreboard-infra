@@ -1,0 +1,51 @@
+name: Bootstrap WIF + Service Accounts (one-time)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_ID: scoreboard-482409
+  TF_WORKDIR: terraform/bootstrap
+  TF_BACKEND_BUCKET: scoreboard-482409-tfstate-8b862d29
+  GITHUB_OWNER: OmerBarzilay16
+  GITHUB_REPO: ggl-scoreboard-infra
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # Uses TEMPORARY JSON key secret you created
+      - name: Auth to GCP using bootstrap SA key (temporary)
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_BOOTSTRAP_SA_KEY }}
+
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+
+      - name: Terraform Init (bootstrap)
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform init -reconfigure -backend-config="bucket=${TF_BACKEND_BUCKET}"
+
+      - name: Terraform Apply (bootstrap)
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: |
+          terraform apply -auto-approve \
+            -var="project_id=${PROJECT_ID}" \
+            -var="github_owner=${GITHUB_OWNER}" \
+            -var="github_repo=${GITHUB_REPO}"
+
+      - name: Show bootstrap outputs
+        working-directory: ${{ env.TF_WORKDIR }}
+        run: terraform output
