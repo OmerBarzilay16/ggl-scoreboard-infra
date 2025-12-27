@@ -26,7 +26,7 @@ jobs:
       - name: Auth to GCP (WIF as arena-builder-sa)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl/providers/github-provider-ggl
           service_account: arena-builder-sa@scoreboard-482409.iam.gserviceaccount.com
 
       - name: Set up gcloud
@@ -65,17 +65,19 @@ jobs:
       - name: Auth to GCP (WIF as scoreboard-deployer-sa)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          workload_identity_provider: projects/647816721608/locations/global/workloadIdentityPools/github-pool-ggl/providers/github-provider-ggl
           service_account: scoreboard-deployer-sa@scoreboard-482409.iam.gserviceaccount.com
 
       - name: Set up gcloud
         uses: google-github-actions/setup-gcloud@v2
         with:
           project_id: ${{ env.PROJECT_ID }}
-      - name: Install GKE auth plugin
+      - name: Enable GKE auth plugin
         run: |
-          gcloud components install gke-gcloud-auth-plugin --quiet
           echo "USE_GKE_GCLOUD_AUTH_PLUGIN=True" >> $GITHUB_ENV
+          gcloud version
+          which gke-gcloud-auth-plugin || true
+          gke-gcloud-auth-plugin --version || true
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v4
