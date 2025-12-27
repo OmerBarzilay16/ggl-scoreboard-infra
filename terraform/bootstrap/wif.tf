@@ -23,7 +23,7 @@ resource "google_iam_workload_identity_pool_provider" "github" {
     "attribute.ref"        = "assertion.ref"
   }
 
-  # Restrict who can use this provider:
+  # Only allow your repo to use this provider
   attribute_condition = "attribute.repository == '${var.github_owner}/${var.github_repo}'"
 }
 
@@ -31,14 +31,20 @@ resource "google_iam_workload_identity_pool_provider" "github" {
 resource "google_service_account_iam_member" "wif_impersonate_builder" {
   service_account_id = google_service_account.arena_builder.name
   role               = "roles/iam.workloadIdentityUser"
-
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_owner}/${var.github_repo}"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_owner}/${var.github_repo}"
 }
 
 # Allow GitHub repo to impersonate the Deployer SA
 resource "google_service_account_iam_member" "wif_impersonate_deployer" {
   service_account_id = google_service_account.scoreboard_deployer.name
   role               = "roles/iam.workloadIdentityUser"
+  member             = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_owner}/${var.github_repo}"
+}
 
-  member = "principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.github.name}/attribute.repository/${var.github_owner}/${var.github_repo}"
+output "workload_identity_pool_name" {
+  value = google_iam_workload_identity_pool.github.name
+}
+
+output "wif_provider_resource_name" {
+  value = google_iam_workload_identity_pool_provider.github.name
 }
