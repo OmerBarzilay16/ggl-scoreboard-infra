@@ -20,6 +20,6 @@ output "scoreboard_deployer_sa_email" {
 }
 
 output "wif_provider_resource_name" {
-  value       = google_iam_workload_identity_pool_provider.github.name
+  value       = data.google_iam_workload_identity_pool_provider.github.name
   description = "Use this in GitHub Actions auth step as workload_identity_provider."
 }
