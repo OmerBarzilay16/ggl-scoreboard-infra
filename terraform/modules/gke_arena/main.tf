@@ -60,17 +60,33 @@ resource "google_container_cluster" "arena" {
 resource "google_container_node_pool" "primary" {
   provider = google-beta
 
-  name       = "${var.cluster_name}-np"
-  location   = var.region
-  cluster    = google_container_cluster.arena.name
+  name     = "${var.cluster_name}-np"
+  location = var.region
+  cluster  = google_container_cluster.arena.name
 
-  # 2 nodes total (1 per zone) when var.zones has 2 zones
-  node_count     = 1
   node_locations = var.zones
+
+  # Regional node pools: node_count is PER ZONE.
+  # With 2 zones -> node_count=1 => total 2 nodes (HA).
+  node_count = 1
+
+  autoscaling {
+    # Also PER ZONE:
+    # With 2 zones -> min=1 => total min 2 nodes
+    # With 2 zones -> max=1 => total max 2 nodes (fixed size, predictable HA)
+    min_node_count = 1
+    max_node_count = 1
+  }
 
   node_config {
     machine_type = "e2-medium"
-    spot         = false
+
+    # Keep stable nodes (avoid spot evictions)
+    spot = false
+
+    # IMPORTANT: avoid SSD_TOTAL_GB quota hits
+    disk_type    = "pd-standard"
+    disk_size_gb = 20
 
     oauth_scopes = [
       "https://www.googleapis.com/auth/cloud-platform"
